@@ -673,7 +673,11 @@ fn new_staged_upload(base: &std::path::Path) -> Result<(File, String)> {
         let path = staged_upload_path(base, &suffix);
         let mut options = OpenOptions::new();
         match options.read(true).write(true).create_new(true).open(&path) {
-            Ok(f) => return Ok((f, suffix)),
+            Ok(f) => {
+                f.sync_all()
+                    .map_err(|e| Error::UnableToOpenFile { source: e, path })?;
+                return Ok((f, suffix));
+            }
             Err(source) => match source.kind() {
                 ErrorKind::AlreadyExists => multipart_id += 1,
                 ErrorKind::NotFound => create_parent_dirs(&path, source)?,
