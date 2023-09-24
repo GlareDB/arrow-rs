@@ -279,7 +279,8 @@ impl ObjectStore for LocalFileSystem {
                 .context(UnableToCopyDataToFileSnafu)
                 .unwrap();
 
-            file.sync_all().unwrap();
+            std::mem::drop(file);
+
             std::fs::rename(&staging_path, &path)
                 .context(UnableToRenameFileSnafu)
                 .expect(&format!("path: {staging_path:?}"));
