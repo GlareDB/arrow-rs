@@ -277,14 +277,14 @@ impl ObjectStore for LocalFileSystem {
             let staging_path = staged_upload_path(&path, &suffix);
             file.write_all(&bytes)
                 .context(UnableToCopyDataToFileSnafu)
-                .and_then(|_| {
-                    file.sync_all().unwrap();
-                    std::fs::rename(&staging_path, &path).context(UnableToRenameFileSnafu)
-                })
-                .map_err(|e| {
-                    let _ = std::fs::remove_file(&staging_path); // Attempt to cleanup
-                    e.into()
-                })
+                .unwrap();
+
+            file.sync_all().unwrap();
+            std::fs::rename(&staging_path, &path)
+                .context(UnableToRenameFileSnafu)
+                .expect(&format!("path: {staging_path:?}"));
+
+            Ok(())
         })
         .await
     }
